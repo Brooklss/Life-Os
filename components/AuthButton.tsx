@@ -32,7 +32,7 @@ export default function AuthButton() {
   const handleSignIn = async (provider: 'github' | 'google' | 'email') => {
     setLoading(true)
     try {
-      const redirectTo = typeof window !== "undefined" ? window.location.origin : undefined
+      const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined
       
       if (provider === 'email') {
         const email = typeof window !== "undefined" ? window.prompt("Enter your email to receive a sign-in link") : null

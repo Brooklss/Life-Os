@@ -1059,8 +1059,8 @@ export default function HabitTracker() {
                 </div>
               </div>
 
-              {/* Habits Grid */}
-              <div className="overflow-x-auto">
+              {/* Desktop Habits Grid */}
+              <div className="hidden md:block overflow-x-auto">
                 <div className="min-w-fit">
                   {/* Header Row */}
                   <div className={`mb-4 grid gap-1 text-xs md:text-sm`} style={{gridTemplateColumns: getGridTemplateColumns()}}>
@@ -1146,16 +1146,111 @@ export default function HabitTracker() {
                       </div>
                     )
                   })}
-
-                  {currentHabits.length === 0 && (
-                    <div className="text-center py-16 text-slate-400">
-                      <TrendingUp className="h-16 w-16 mx-auto mb-4 text-slate-500" />
-                      <p className="text-xl font-medium mb-2">No habits yet for {currentQuarterInfo?.name}</p>
-                      <p className="text-sm">Add your first habit above to start building consistency!</p>
-                    </div>
-                  )}
                 </div>
               </div>
+
+              {/* Mobile Habits Layout - Horizontal Names, Vertical Days */}
+              <div className="md:hidden">
+                {/* Habit Names Header - Horizontal */}
+                <div className="flex gap-2 mb-4 overflow-x-auto">
+                  {currentHabits.map((habit) => {
+                    const progress = getHabitProgress(habit)
+                    return (
+                      <div key={habit.id} className="bg-slate-800/30 rounded-lg p-3 min-w-[120px] flex-shrink-0">
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-white font-medium text-sm truncate">{habit.name}</h3>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => deleteHabit(habit.id)}
+                            className="h-5 w-5 text-red-400 hover:bg-red-500/20 hover:text-red-300 ml-1"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                        <div className="text-center">
+                          <div className="text-xs text-emerald-400 font-semibold">{progress.percentage}%</div>
+                          <div className="text-xs text-slate-500">{progress.completed}/{progress.total}</div>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Days Grid - Vertical */}
+                <div className="space-y-1">
+                  {/* Header Row - Habit Names */}
+                  <div className="flex items-center gap-3 p-2 bg-slate-800/50 rounded-lg mb-2">
+                    <div className="w-8 text-center">
+                      <span className="text-xs text-slate-400 font-medium">Day</span>
+                    </div>
+                    <div className="flex gap-1 flex-1">
+                      {currentHabits.map((habit) => (
+                        <div key={habit.id} className="w-8 h-8 flex items-center justify-center">
+                          <span className="text-xs text-slate-300 font-medium truncate">
+                            {habit.name.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Days Rows */}
+                  {Array.from({ length: monthLength }, (_, dayIndex) => {
+                    const absoluteIndex = quarterOffsets[currentMonth] + dayIndex
+                    const absDayNumber = absoluteIndex + 1
+                    const isCurrent = absDayNumber === currentDay
+                    const isPast = absDayNumber < currentDay
+                    const isFuture = absDayNumber > currentDay
+                    
+                    return (
+                      <div key={dayIndex} className="flex items-center gap-3 p-2">
+                        {/* Day Number */}
+                        <div className="w-8 text-center">
+                          <span className={`text-sm font-medium ${
+                            isCurrent ? "text-emerald-400" : "text-slate-300"
+                          }`}>
+                            {dayIndex + 1}
+                          </span>
+                        </div>
+
+                        {/* Habit Checkboxes - Small Squares */}
+                        <div className="flex gap-1 flex-1">
+                          {currentHabits.map((habit) => {
+                            const isChecked = !!habit.completions[absoluteIndex]
+                            return (
+                              <button
+                                key={habit.id}
+                                onClick={() => toggleCompletion(habit.id, dayIndex)}
+                                disabled={isFuture}
+                                className={`w-8 h-8 flex items-center justify-center rounded border transition-all duration-200 ${
+                                  isCurrent
+                                    ? "border-emerald-500 bg-emerald-500/20 hover:bg-emerald-500/30"
+                                    : isPast
+                                      ? isChecked
+                                        ? "border-emerald-500 bg-emerald-500/40 hover:bg-emerald-500/50"
+                                        : "border-red-500/50 bg-red-500/10 hover:bg-red-500/20"
+                                      : "border-slate-600 bg-slate-700/50 cursor-not-allowed opacity-50"
+                                }`}
+                              >
+                                {isChecked && <X className="h-4 w-4 text-emerald-400" />}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              {currentHabits.length === 0 && (
+                <div className="text-center py-16 text-slate-400">
+                  <TrendingUp className="h-16 w-16 mx-auto mb-4 text-slate-500" />
+                  <p className="text-xl font-medium mb-2">No habits yet for {currentQuarterInfo?.name}</p>
+                  <p className="text-sm">Add your first habit above to start building consistency!</p>
+                </div>
+              )}
 
               {/* Quarter Info */}
               <div className="mt-12 text-center text-sm text-slate-400 bg-slate-800/30 rounded-lg p-4">
