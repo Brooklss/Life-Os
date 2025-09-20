@@ -1,7 +1,52 @@
+'use client'
+
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { useSearchParams } from 'next/navigation'
 
 export default function AuthCodeError() {
+  const searchParams = useSearchParams()
+  const error = searchParams.get('error')
+  const description = searchParams.get('description')
+
+  const getErrorMessage = () => {
+    switch (error) {
+      case 'exchange_failed':
+        return 'Failed to exchange authentication code for session. The code may have expired or already been used.'
+      case 'no_code':
+        return 'No authentication code was provided. Please try signing in again.'
+      case 'unexpected':
+        return 'An unexpected error occurred during authentication.'
+      default:
+        return 'There was an error processing your authentication. This could be due to:'
+    }
+  }
+
+  const getErrorDetails = () => {
+    if (description) {
+      return (
+        <div className="mt-4 p-4 bg-slate-800 rounded-lg">
+          <p className="text-sm text-slate-300 font-mono break-all">
+            {description}
+          </p>
+        </div>
+      )
+    }
+    
+    if (!error || error === 'general') {
+      return (
+        <ul className="mt-4 text-sm text-slate-400 text-left space-y-2">
+          <li>• The authentication code has expired</li>
+          <li>• The code has already been used</li>
+          <li>• There was a network error</li>
+          <li>• The redirect URL is not properly configured</li>
+        </ul>
+      )
+    }
+    
+    return null
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-900">
       <div className="max-w-md w-full space-y-8 p-8">
@@ -10,13 +55,9 @@ export default function AuthCodeError() {
             Authentication Error
           </h2>
           <p className="mt-2 text-sm text-slate-400">
-            There was an error processing your authentication. This could be due to:
+            {getErrorMessage()}
           </p>
-          <ul className="mt-4 text-sm text-slate-400 text-left space-y-2">
-            <li>• The authentication code has expired</li>
-            <li>• The code has already been used</li>
-            <li>• There was a network error</li>
-          </ul>
+          {getErrorDetails()}
         </div>
         <div className="mt-8 space-y-4">
           <Button asChild className="w-full bg-emerald-600 hover:bg-emerald-700">
