@@ -9,6 +9,16 @@ export async function GET(request: NextRequest) {
   // if "next" is in param, use it as the redirect URL
   const next = searchParams.get('next') ?? '/'
 
+  // Debug logging
+  console.log('Auth callback received:', {
+    url: request.url,
+    origin,
+    code: code ? 'present' : 'missing',
+    error,
+    errorDescription,
+    allParams: Object.fromEntries(searchParams.entries())
+  })
+
   // Handle OAuth errors
   if (error) {
     console.error('OAuth error:', error, errorDescription)

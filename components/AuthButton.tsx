@@ -34,6 +34,13 @@ export default function AuthButton() {
     try {
       const redirectTo = typeof window !== "undefined" ? `${window.location.origin}/auth/callback` : undefined
       
+      // Debug logging
+      console.log('Sign in attempt:', {
+        provider,
+        redirectTo,
+        currentOrigin: typeof window !== "undefined" ? window.location.origin : 'server'
+      })
+      
       if (provider === 'email') {
         const email = typeof window !== "undefined" ? window.prompt("Enter your email to receive a sign-in link") : null
         if (email) {
