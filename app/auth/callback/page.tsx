@@ -50,6 +50,17 @@ export default function AuthCallbackPage() {
         // 2) Handle PKCE authorization code flow
         const code = searchParams.get('code')
         if (code) {
+          // First, allow the SDK's detectSessionInUrl to auto-exchange
+          // Give the SDK a short tick to process the URL
+          await new Promise((r) => setTimeout(r, 50))
+
+          const { data: existing } = await supabase.auth.getSession()
+          if (existing.session) {
+            router.replace(resolveNext(nextParam))
+            return
+          }
+
+          // Fallback: manually exchange if auto-detect did not run
           const { data, error } = await supabase.auth.exchangeCodeForSession(code)
           if (error) {
             router.push('/auth/auth-code-error?error=exchange_failed&description=' + encodeURIComponent(error.message))
