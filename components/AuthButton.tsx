@@ -60,7 +60,9 @@ export default function AuthButton() {
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: { redirectTo },
+        options: { 
+          redirectTo: redirectTo ? `${redirectTo}?next=${encodeURIComponent(window.location.pathname)}` : undefined 
+        },
       })
       
       if (error) {
