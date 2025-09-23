@@ -5,6 +5,7 @@ import { GeistMono } from "geist/font/mono"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import "./globals.css"
+import { AuthRedirector } from "@/components/AuthRedirector"
 
 export const metadata: Metadata = {
   title: "Quarterly Habit Tracker",
@@ -20,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
+        <AuthRedirector />
         <Suspense fallback={null}>{children}</Suspense>
         <Analytics />
       </body>
