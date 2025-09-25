@@ -11,7 +11,10 @@ export default function AuthCallbackPage() {
   useEffect(() => {
     const handleAuthCallback = async () => {
       try {
-        const nextParam = searchParams.get('next') || '/'
+        // Prefer reading from window.location to avoid any hook timing issues
+        const url = typeof window !== 'undefined' ? new URL(window.location.href) : null
+        const qp = url ? url.searchParams : searchParams
+        const nextParam = (qp.get('next') || '/')
 
         const resolveNext = (value: string | null | undefined) => {
           const candidate = value || '/'
@@ -23,11 +26,24 @@ export default function AuthCallbackPage() {
           }
         }
 
-        // 1) Handle implicit/hash-based tokens (magic link, some providers)
+        // 1) Handle explicit provider error params from Supabase
+        const supaError = qp.get('error')
+        const supaErrorDesc = qp.get('error_description') || qp.get('description')
+        if (supaError && supaError !== 'null' && supaError !== 'undefined') {
+          router.replace('/auth/auth-code-error?error=' + encodeURIComponent(supaError) + '&description=' + encodeURIComponent(supaErrorDesc || 'Authentication error'))
+          return
+        }
+
+        // 2) Handle implicit/hash-based tokens (magic link, some providers)
         const hash = typeof window !== 'undefined' ? window.location.hash.substring(1) : ''
         const hashParams = new URLSearchParams(hash)
-        const accessToken = hashParams.get('access_token')
-        const refreshToken = hashParams.get('refresh_token')
+        const hashAccessToken = hashParams.get('access_token')
+        const hashRefreshToken = hashParams.get('refresh_token')
+        // Some environments may deliver tokens via query instead of hash
+        const queryAccessToken = qp.get('access_token')
+        const queryRefreshToken = qp.get('refresh_token')
+        const accessToken = hashAccessToken || queryAccessToken
+        const refreshToken = hashRefreshToken || queryRefreshToken
 
         if (accessToken) {
           const { error } = await supabase.auth.setSession({
@@ -47,12 +63,13 @@ export default function AuthCallbackPage() {
           return
         }
 
-        // 2) Handle PKCE authorization code flow
-        const code = searchParams.get('code')
+        // 3) Handle PKCE authorization code flow
+        // Read from window search params to avoid any timing/cache issues
+        const code = qp.get('code')
         if (code) {
           // First, allow the SDK's detectSessionInUrl to auto-exchange
           // Give the SDK a short tick to process the URL
-          await new Promise((r) => setTimeout(r, 50))
+          await new Promise((r) => setTimeout(r, 150))
 
           const { data: existing } = await supabase.auth.getSession()
           if (existing.session) {
@@ -72,7 +89,7 @@ export default function AuthCallbackPage() {
           }
         }
 
-        // 3) Nothing found
+        // 4) Nothing found — provide more context for debugging
         router.replace('/auth/auth-code-error?error=no_code&description=' + encodeURIComponent('No authentication code provided'))
       } catch (err) {
         router.replace('/auth/auth-code-error?error=callback_error&description=' + encodeURIComponent('An error occurred during authentication'))

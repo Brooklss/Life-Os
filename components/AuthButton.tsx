@@ -46,7 +46,10 @@ export default function AuthButton() {
         if (email) {
           const { error: emailError } = await supabase.auth.signInWithOtp({
             email,
-            options: { emailRedirectTo: redirectTo },
+            options: { 
+              emailRedirectTo: redirectTo,
+              shouldCreateUser: true,
+            },
           })
           if (emailError) {
             console.error(emailError)
